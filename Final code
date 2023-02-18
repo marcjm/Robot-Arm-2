@@ -1,0 +1,139 @@
+import time
+import math
+from motorController import *
+
+board = NanoMotorBoard()
+def Init():
+    print("reboot")
+    board.reboot()
+    time.sleep_ms(500)
+    
+    motors = []
+
+    # at 50 it works as expected, at 60 shift sides and 
+    #is too small duty to move, at 70 is very big duty.
+    for i in range(2):
+        motors.append(DCMotor(i))
+
+    for motor in motors:  # initialize
+        b = motor.setDuty(0)
+        b = motor.resetEncoder(0)
+    return motors
+
+def Stop(motors):  
+    for motor in motors:  # initialize
+        b = motor.setDuty(0)
+
+
+motors = Init()
+# for i in range(100):
+    # Ramp(motors)
+Stop(motors)
+for motor in motors:
+    motor.setDuty(0)
+
+time.sleep(1.75)
+# Stop(motors)
+#b = motor.setDuty(duty)
+# e = motor.readEncoder()
+# print(a)
+Stop(motors)
+e = motors[0].readEncoder()
+a = e*(360/1200)
+print(a)
+time.sleep_ms(100)
+
+angles = [(motors[0].readEncoder())*(3/10),(motors[1].readEncoder())*(3/10)]
+
+def runmotor(i, angle):
+    currentangle = (motors[i].readEncoder())*(3/10)
+    motors[i].setDuty(int(0.7*(angle- currentangle)))
+    # print("angle",angle)
+    # print("current angle",currentangle)
+    while (angle - currentangle )> 0:
+        currentangle = (motors[i].readEncoder())*(3/10)
+        # print(motors[i].readEncoder())
+        time.sleep_ms(1)
+    motors[i].setDuty(0)
+    angles[i] = (motors[i].readEncoder())*(3/10)
+
+def negrunmotor(i, angle):
+    currentangle = (motors[i].readEncoder())*(3/10)
+    motors[i].setDuty(int(-0.7*(angle- currentangle)))
+    # print("angle",angle)
+    # print("current angle",currentangle)
+    while (angles[i]- currentangle )< angle:
+        currentangle = (motors[i].readEncoder())*(3/10)
+        # print(motors[i].readEncoder())
+        time.sleep_ms(1)
+    motors[i].setDuty(0)
+    angles[i] = (motors[i].readEncoder())*(3/10)
+
+
+def posneg(k,j):
+    #with j being the angle 
+    if j > 0:
+        runmotor(k,j)
+    else:
+        negrunmotor(k,abs(j))
+    
+
+def position(x,y):
+    L1 = 2.5
+    L2 = 2.5
+    L3 = math.sqrt((x**2)+(y**2))
+    B1 = (L2**2 - L1**2 -L3**2)/(-2*L1*L3)
+    A1 = math.acos(B1)
+    Th1 = (y/x)- math.tan(A1)
+    Ang1 = Th1 * (180/math.pi)
+    B2 = (L3**2 - L2**2 - L1**2)/(-2*L1*L2)
+    A2 = math.acos(B2)
+    Th2 = math.pi - A2
+    Ang2 = Th2 * (180/math.pi)
+    print(Ang1)
+    print(Ang2)
+    posneg(0,Ang1)
+    time.sleep_ms(20)
+    posneg(1,Ang2)
+    time.sleep_ms(20)
+
+def start(m,n):    
+    while True:
+        position(m,n)
+        m = float(input()) - m
+        print("m is", m)
+        n = float(input()) - n
+        print("n is", n)
+
+position(1.25,1.25)
+time.sleep_ms(20)
+position(2.5,2)
+time.sleep_ms(20)
+# position(2.3,2.7)
+# time.sleep_ms(20)
+# position(2.1,2.8)
+# time.sleep_ms(20)
+# position(1.25,3)
+# time.sleep_ms(20)
+# position(1,2.8)
+# time.sleep_ms(20)
+# position(0.5,2.7)
+# time.sleep_ms(20)
+# position(0.1,2.7)
+# time.sleep_ms(20)
+# position(-0.5,2.7)
+# time.sleep_ms(20)
+# position(-1,2.8)
+# time.sleep_ms(2000)
+# position(-1.25,3)
+# time.sleep_ms(2000)
+# position(-2.1,2.8)
+# time.sleep_ms(2000)
+# position(-2.3,2.7)
+# time.sleep_ms(2000)
+# position(-2.5,2)
+# time.sleep_ms(2000)
+# position(-1.25,1)
+# time.sleep_ms(2000)
+# position(0,0)
+# time.sleep_ms(2000)
